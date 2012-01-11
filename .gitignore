@@ -1,0 +1,11 @@
+.project
+.settings/
+Referenced Packages/
+salesforce.schema
+src/package.xml
+src/pages/FileNotFound.page
+src/pages/FileNotFound.page-meta.xml
+src/pages/InMaintenance.page
+src/pages/InMaintenance.page-meta.xml
+src/pages/SiteTemplate.page
+src/pages/SiteTemplate.page-meta.xml
