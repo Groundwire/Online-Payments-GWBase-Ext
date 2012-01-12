@@ -1,6 +1,13 @@
 Changelog
 =========
 
+1.4 - released
+--------------
+
+* new files to ignore for dupeblocker compatibility checking
+* lowered size of recurring IPN test to bring down SOQL statements, from 10 to 4.
+ [greenstork]
+
 1.0-1.3 - released
 ------------------
 
