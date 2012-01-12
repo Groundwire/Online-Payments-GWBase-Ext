@@ -9,3 +9,11 @@ src/pages/InMaintenance.page
 src/pages/InMaintenance.page-meta.xml
 src/pages/SiteTemplate.page
 src/pages/SiteTemplate.page-meta.xml
+src/classes/GW_AccountMaintenance_withDupeblocker.cls
+src/classes/GW_AccountMaintenance_withDupeblocker.cls-meta.xml
+src/classes/GW_DefaultAccount_withDupeblocker.cls
+src/classes/GW_DefaultAccount_withDupeblocker.cls-meta.xml
+src/triggers/GW_AccountTrigger_withDupeblocker.trigger
+src/triggers/GW_AccountTrigger_withDupeblocker.trigger-meta.xml
+src/triggers/GW_ContactTrigger_withDupeblocker.trigger
+src/triggers/GW_ContactTrigger_withDupeblocker.trigger-meta.xml
