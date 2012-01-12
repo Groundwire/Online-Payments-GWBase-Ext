@@ -154,7 +154,7 @@ public with sharing class PaymentListenerPaypalGWTest {
 		gwop.PaymentListenerPaypal ppn;
 				
 		test.startTest();
-		integer cIPN = 10;	// when tried to deploy with 24, only 15 opps created.  not sure what went wrong. 
+		integer cIPN = 4;	// when tried to deploy with 24, only 15 opps created.  not sure what went wrong. 
 		for (integer i = 1; i <= cIPN; i++) {
 		
 			string txnType = 'subscr_payment';
