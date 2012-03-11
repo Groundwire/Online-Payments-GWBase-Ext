@@ -982,6 +982,10 @@ global virtual with sharing class PaymentToSalesforceGW extends gwop.PaymentToSa
         //rp.Occurrences__c = payment.occurrences; 
         rp.GWBase__Amount__c = payment.totalAmount;
             
+        // fill in credit card info
+        rp.Credit_Card_Last_4_Digits__c = payment.last4digits;
+        rp.Credit_Card_Expiration__c = payment.cardExpiration;
+
         // build the name in the form "John and Jane Doe Monthly Payment"
         if (companyIsPayer || payerContact == null) {
             rp.name = payerAccount.Name; 
@@ -1215,7 +1219,6 @@ global virtual with sharing class PaymentToSalesforceGW extends gwop.PaymentToSa
 
         // build a description field to display other payment data
         string descr = '' + 
-//UNDONE DJH:           ((cardType != null) ? ('Paid by ' + cardType + ((last4digits != null) ? ' *-' + last4digits : '')) : '') +
             ((payment.currencyCode != null) ? '\nCurrency Code: ' + payment.currencyCode : '') +
             ((payment.fee != null) ? '\nPayment Fee: ' + payment.fee.format() : '') + 
             ((payment.tax != null) ? '\nTax: ' + payment.tax.format() : '') + 
@@ -1235,6 +1238,10 @@ global virtual with sharing class PaymentToSalesforceGW extends gwop.PaymentToSa
         // finish the description
         if (payment.memo != null) descr += '\nPayment Memo:\n' + payment.memo;
         if (descr != '') o.description = descr.trim();
+        
+        // fill in credit card info
+        rp.Credit_Card_Last_4_Digits__c = payment.last4digits;
+        rp.Credit_Card_Expiration__c = payment.cardExpiration;
 
         // fill in custom payment fields
         if (payment.custom != null) {
