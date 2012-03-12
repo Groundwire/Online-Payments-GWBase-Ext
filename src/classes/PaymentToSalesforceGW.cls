@@ -20,7 +20,7 @@ global virtual with sharing class PaymentToSalesforceGW extends gwop.PaymentToSa
 *  [check on edge cases for setting values back into properties or not using them - e.g. setOppValues]
 *  [check on whether unchanged contacts/accounts are getting updated]
 -----------------------------------------------------------------------------------------------*/   
- 
+
     // custom settings are retrieved in the constructor
     global gwop__OnlinePaymentSettings__c opSettings;
 
@@ -576,12 +576,12 @@ global virtual with sharing class PaymentToSalesforceGW extends gwop.PaymentToSa
                     // insert or update the opp
                     if (paymentOpp != null) {
                         if (oldOpp == null) {
-                            system.debug(LoggingLevel.WARN,'inserting opp in fprocessSinglePayment.');
-                            system.debug(LoggingLevel.WARN,paymentOpp);
+                            //system.debug(LoggingLevel.WARN,'inserting opp in fprocessSinglePayment.');
+                            //system.debug(LoggingLevel.WARN,paymentOpp);
                             insert paymentOpp;
                         } else if (paymentOpp != oldOpp) {
-                            system.debug('updating opp in fprocessSinglePayment.');
-                            system.debug(paymentOpp);                           
+                            //system.debug('updating opp in fprocessSinglePayment.');
+                            //system.debug(paymentOpp);                           
                             update paymentOpp;
 
                             // for completed payments, there may have been an unpaid amount                         
@@ -603,6 +603,8 @@ global virtual with sharing class PaymentToSalesforceGW extends gwop.PaymentToSa
                                     installment.GWBase__paid__c = true;
                                     installment.GWBase__check_date__c = system.today();
                                     installment.GWBase__Online_Transaction_ID__c = payment.txnId;
+                                    installment.Credit_Card_Last_4_Digits__c = payment.last4digits;
+                                    installment.Credit_Card_Expiration__c = payment.cardExpiration;
                                     try {
                                         //system.debug('updating installment');
                                         //system.debug(installment);
@@ -885,6 +887,8 @@ global virtual with sharing class PaymentToSalesforceGW extends gwop.PaymentToSa
                                 installment.GWBase__paid__c = true;
                                 installment.GWBase__date__c = system.today();
                                 installment.GWBase__Online_Transaction_ID__c = payment.txnId;
+                                installment.Credit_Card_Last_4_Digits__c = payment.last4digits;
+                                installment.Credit_Card_Expiration__c = payment.cardExpiration;
                                 try {
                                     //system.debug('updating installment');
                                     //system.debug(installment);

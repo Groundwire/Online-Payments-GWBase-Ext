@@ -13,7 +13,7 @@
     </packageVersions>
     <packageVersions>
         <majorNumber>1</majorNumber>
-        <minorNumber>11</minorNumber>
+        <minorNumber>12</minorNumber>
         <namespace>gwop</namespace>
     </packageVersions>
     <status>Active</status>
