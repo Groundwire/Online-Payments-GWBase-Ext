@@ -1,6 +1,13 @@
 Changelog
 =========
 
+1.5 - released
+--------------
+
+* support for refunds
+* moved tests to separate class
+ [evan]
+
 1.4 - released
 --------------
 
