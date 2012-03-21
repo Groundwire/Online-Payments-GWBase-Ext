@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ApexClass xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>23.0</apiVersion>
+    <packageVersions>
+        <majorNumber>2</majorNumber>
+        <minorNumber>27</minorNumber>
+        <namespace>CRMfusionDBR101</namespace>
+    </packageVersions>
+    <packageVersions>
+        <majorNumber>2</majorNumber>
+        <minorNumber>0</minorNumber>
+        <namespace>GWBase</namespace>
+    </packageVersions>
+    <packageVersions>
+        <majorNumber>1</majorNumber>
+        <minorNumber>12</minorNumber>
+        <namespace>gwop</namespace>
+    </packageVersions>
+    <status>Active</status>
+</ApexClass>
