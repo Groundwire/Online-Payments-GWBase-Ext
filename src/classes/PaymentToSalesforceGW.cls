@@ -24,7 +24,7 @@ global virtual with sharing class PaymentToSalesforceGW extends gwop.PaymentToSa
     // custom settings are retrieved in the constructor
     global gwop__OnlinePaymentSettings__c opSettings;
 
-    public string INDIVIDUAL_ACCOUNT_NAME; // = ONEN_Constants.INDIVIDUAL_ACCOUNT_NAME;
+    public string INDIVIDUAL_ACCOUNT_NAME;
         
     // if a recurring payment record gets created or updated, we store it here
     public GWBase__recurring_payment_profile__c recurringPayment { get; private set; }
@@ -606,6 +606,7 @@ global virtual with sharing class PaymentToSalesforceGW extends gwop.PaymentToSa
                             payment.pmtStatus == gwop.OnlinePayment.PaymentStatus.AUTHORIZED)) ||
                         (opSettings.gwop__CREATE_LOST_OPPS__c &&
                             (payment.pmtStatus == gwop.OnlinePayment.PaymentStatus.FAILED || 
+                            payment.pmtStatus == gwop.OnlinePayment.PaymentStatus.VOIDED || 
                             payment.pmtStatus == gwop.OnlinePayment.PaymentStatus.DECLINED )))) {
                                     
                         paymentOpp = new Opportunity(
@@ -1301,7 +1302,7 @@ global virtual with sharing class PaymentToSalesforceGW extends gwop.PaymentToSa
             o.stageName = 
                 ((payment.pmtStatus == gwop.OnlinePayment.PaymentStatus.PENDING || payment.pmtStatus == gwop.OnlinePayment.PaymentStatus.AUTHORIZED) && !oppWasAlreadyClosed) ? 
                 opSettings.gwop__OPP_STAGE_FOR_PENDING_PAYMENTS__c : 
-                (payment.pmtStatus == gwop.OnlinePayment.PaymentStatus.FAILED || payment.pmtStatus == gwop.OnlinePayment.PaymentStatus.DECLINED ) ? 
+                (payment.pmtStatus == gwop.OnlinePayment.PaymentStatus.FAILED || payment.pmtStatus == gwop.OnlinePayment.PaymentStatus.VOIDED || payment.pmtStatus == gwop.OnlinePayment.PaymentStatus.DECLINED ) ? 
                 opSettings.gwop__Opp_Stage_for_Lost_Opps__c : 
                 opSettings.gwop__Opp_Stage_for_Closed_Opps__c;
             //system.debug(logginglevel.warn, 'setOppValues assumes Single Payment with stage=' + o.StageName);
@@ -1313,7 +1314,7 @@ global virtual with sharing class PaymentToSalesforceGW extends gwop.PaymentToSa
             o.stageName = 
                 ((payment.pmtStatus == gwop.OnlinePayment.PaymentStatus.PENDING || payment.pmtStatus == gwop.OnlinePayment.PaymentStatus.AUTHORIZED) && !oppWasAlreadyClosed) ? 
                 opSettings.gwop__OPP_STAGE_FOR_PENDING_PAYMENTS__c : 
-                (payment.pmtStatus == gwop.OnlinePayment.PaymentStatus.FAILED || payment.pmtStatus == gwop.OnlinePayment.PaymentStatus.DECLINED || (isUpdate && payment.pmtStatus == gwop.OnlinePayment.PaymentStatus.REVERSED)) ? 
+                (payment.pmtStatus == gwop.OnlinePayment.PaymentStatus.FAILED || payment.pmtStatus == gwop.OnlinePayment.PaymentStatus.VOIDED || payment.pmtStatus == gwop.OnlinePayment.PaymentStatus.DECLINED ) ? 
                 opSettings.gwop__Opp_Stage_for_Lost_Opps__c :                 
                 GWBase.ONEN_Constants.OPP_DEFAULT_PLEDGED_STAGE;                
             //system.debug(logginglevel.warn, 'setOppValues assumes Pledge with Installments with stage=' + o.StageName);
@@ -1325,7 +1326,7 @@ global virtual with sharing class PaymentToSalesforceGW extends gwop.PaymentToSa
             o.stageName = 
                 ((payment.pmtStatus == gwop.OnlinePayment.PaymentStatus.PENDING || payment.pmtStatus == gwop.OnlinePayment.PaymentStatus.AUTHORIZED) && !oppWasAlreadyClosed) ? 
                 GWBase.ONEN_Constants.OPP_DEFAULT_RECURRING_STAGE : 
-                (payment.pmtStatus == gwop.OnlinePayment.PaymentStatus.FAILED || payment.pmtStatus == gwop.OnlinePayment.PaymentStatus.DECLINED || (isUpdate && payment.pmtStatus == gwop.OnlinePayment.PaymentStatus.REVERSED)) ? 
+                (payment.pmtStatus == gwop.OnlinePayment.PaymentStatus.FAILED || payment.pmtStatus == gwop.OnlinePayment.PaymentStatus.VOIDED || payment.pmtStatus == gwop.OnlinePayment.PaymentStatus.DECLINED || (isUpdate && payment.pmtStatus == gwop.OnlinePayment.PaymentStatus.REVERSED)) ? 
                 opSettings.gwop__Opp_Stage_for_Lost_Opps__c : 
                 opSettings.gwop__Opp_Stage_for_Closed_Opps__c;
             //system.debug(logginglevel.warn, 'setOppValues assumes Recurring Payment with stage=' + o.StageName);
@@ -1425,7 +1426,6 @@ global virtual with sharing class PaymentToSalesforceGW extends gwop.PaymentToSa
         return GWBase.GW_RecTypes.GetRecordTypeId('Opportunity', recType);
     }
 
-
     /*------------------------------------------------------------------------------------
     * updateSObjectFromJSON method
     * looks for field values in a json string and sets them in an sobject
@@ -1444,50 +1444,60 @@ global virtual with sharing class PaymentToSalesforceGW extends gwop.PaymentToSa
     -------------------------------------------------------------------------------------*/
     global static sobject updateSObjectFromJSON(string objName, sobject o, string js) {
 
-        JSONParser jp = JSON.createParser(js);
-        string subobject; 
-        while (jp.nextToken() != null) {
-            if (jp.getCurrentToken() == JSONToken.END_OBJECT) {
-                if (subobject == null) {
-                    break;
-                } else {
-                    subobject = null;
-                    jp.nextToken();
-                }
-            }
-            if (jp.getCurrentToken() == JSONToken.FIELD_NAME) {
-                string fld = jp.getText();
-                jp.nextToken();
-                if (jp.getCurrentToken() == JSONToken.START_OBJECT) {
-                    subobject = fld;
-                } else if (subobject == null || subobject == objName) {
-                    try {
-                        if (jp.getCurrentToken() == JSONToken.VALUE_STRING) {
-                            String s = jp.getText();
-                            if (s != '' && s.indexOf('-')==4 && s.split('-').size()==3)
-                                if (s.length() > 12)
-                                    o.put(fld, datetime.valueOfGmt(s));
-                                else
-                                    o.put(fld, date.valueOf(s));
-                            else
-                                o.put(fld, (s == '') ? null : s);
-                        } else if (jp.getCurrentToken() == JSONToken.VALUE_NULL) {
-                            o.put(fld, null);
-                        } else if (jp.getCurrentToken() == JSONToken.VALUE_FALSE) { 
-                            o.put(fld, false);
-                        } else if (jp.getCurrentToken() == JSONToken.VALUE_TRUE) {
-                            o.put(fld, true);
-                        } else if (jp.getCurrentToken() == JSONToken.VALUE_NUMBER_INT) {
-                            o.put(fld, jp.getIntegerValue());
-                        } else if (jp.getCurrentToken() == JSONToken.VALUE_NUMBER_FLOAT) {
-                            o.put(fld, jp.getDecimalValue());
-                        }
-                        //system.debug('Updated field: ' + objName + '.' + fld);
-                    } catch (exception e) {
-                        //system.debug('Could not update field: ' + objName + '.' + fld);
-                    }
-                }
-            }
+		try {
+	        JSONParser jp = JSON.createParser(js);
+	        string subobject; 
+	        while (jp.nextToken() != null) {
+	            if (jp.getCurrentToken() == JSONToken.END_OBJECT) {
+	                if (subobject == null) {
+	                    break;
+	                } else {
+	                    subobject = null;
+	                    jp.nextToken();
+	                }
+	            }
+	            if (jp.getCurrentToken() == JSONToken.FIELD_NAME) {
+	                string fld = jp.getText();
+	                string fldType = GWBase.GW_Describe.getFieldType(objname, fld);
+	                
+	                jp.nextToken();
+	                if (jp.getCurrentToken() == JSONToken.START_OBJECT) {
+	                    subobject = fld;
+	                } else if (subobject == null || subobject == objName) {
+	                    try {
+	                    	
+	                    	// UNDONE: for each type, convert data to the right type of the destination field
+	                    	
+	                        if (jp.getCurrentToken() == JSONToken.VALUE_STRING) {
+	                            String s = jp.getText();
+	                            if (s != '' && s.indexOf('-')==4 && s.split('-').size()==3)
+	                                if (s.length() > 12)
+	                                    o.put(fld, datetime.valueOfGmt(s));
+	                                else
+	                                    o.put(fld, date.valueOf(s));
+	                            else
+	                                o.put(fld, (s == '') ? null : s);
+	                        } else if (jp.getCurrentToken() == JSONToken.VALUE_NULL) {
+	                            o.put(fld, null);
+	                        } else if (jp.getCurrentToken() == JSONToken.VALUE_FALSE) { 
+	                            o.put(fld, false);
+	                        } else if (jp.getCurrentToken() == JSONToken.VALUE_TRUE) {
+	                            o.put(fld, true);
+	                        } else if (jp.getCurrentToken() == JSONToken.VALUE_NUMBER_INT) {
+	                            o.put(fld, jp.getIntegerValue());
+	                        } else if (jp.getCurrentToken() == JSONToken.VALUE_NUMBER_FLOAT) {
+	                            o.put(fld, jp.getDecimalValue());
+	                        }
+	                        //system.debug('Updated field: ' + objName + '.' + fld);
+	                    } catch (exception e) {
+				            system.debug(logginglevel.error,
+				            	'Could not update field \'' + objName + '.' + fld + '\' from custom payment data.');
+	                    }
+	                }
+	            }
+	        }
+        } catch (exception e) {
+            system.debug(logginglevel.error, 'Could not update object \'' + objName + '\' from custom payment data.');
         }
         return o;
     }
