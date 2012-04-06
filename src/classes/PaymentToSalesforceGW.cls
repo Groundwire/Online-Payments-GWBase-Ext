@@ -1400,6 +1400,9 @@ global virtual with sharing class PaymentToSalesforceGW extends gwop.PaymentToSa
                 }
             }
         }
+        
+        if (payment.CampaignId != null) o.campaignId = payment.campaignId;
+        
         //system.debug('leaving setOppValues');
         //system.debug(o);
     }
@@ -1458,7 +1461,7 @@ global virtual with sharing class PaymentToSalesforceGW extends gwop.PaymentToSa
 	            }
 	            if (jp.getCurrentToken() == JSONToken.FIELD_NAME) {
 	                string fld = jp.getText();
-	                string fldType = GWBase.GW_Describe.getFieldType(objname, fld);
+	                
 	                
 	                jp.nextToken();
 	                if (jp.getCurrentToken() == JSONToken.START_OBJECT) {
@@ -1466,27 +1469,76 @@ global virtual with sharing class PaymentToSalesforceGW extends gwop.PaymentToSa
 	                } else if (subobject == null || subobject == objName) {
 	                    try {
 	                    	
-	                    	// UNDONE: for each type, convert data to the right type of the destination field
+	                    	// for each type, convert data to the right type of the destination field
+	                    	string fldType = GWBase.GW_Describe.getFieldType(objname, fld);
 	                    	
 	                        if (jp.getCurrentToken() == JSONToken.VALUE_STRING) {
 	                            String s = jp.getText();
-	                            if (s != '' && s.indexOf('-')==4 && s.split('-').size()==3)
-	                                if (s.length() > 12)
-	                                    o.put(fld, datetime.valueOfGmt(s));
-	                                else
-	                                    o.put(fld, date.valueOf(s));
-	                            else
-	                                o.put(fld, (s == '') ? null : s);
+	                            if (fldType == 'INTEGER') {
+	                            	o.put(fld, integer.valueOf(s));
+	                            } else if (fldType == 'PERCENT' || fldType == 'CURRENCY') {
+	                            	o.put(fld, decimal.valueOf(s));
+	                            } else if (fldType == 'DOUBLE') {
+	                            	o.put(fld, double.valueOf(s));
+	                           	} else if (fldType == 'BOOLEAN'){
+	                            	if (s == 'on' || s == 'yes' || s == 'true') {
+	                            		o.put(fld, true);
+	                            	} else if (s == 'off' || s == 'no' || s == 'false') {
+	                            		o.put(fld, false);
+	                            	}
+	                            } else if (fldType == 'DATE') {
+	                            	if (s != '' && s.contains('/')) {
+	                            		o.put(fld, date.parse(s));
+	                            	} else if (s != '' && s.contains('-')) {
+	                            		o.put(fld, date.valueOf(s));
+	                            	}
+	                            } else if (fldType == 'DATETIME') {	
+	                            	if (s != '' && s.contains('/')) {
+	                            		o.put(fld, datetime.parse(s));
+	                            	} else if (s != '' && s.contains('-')) {
+	                            		o.put(fld, datetime.valueOfGmt(s));
+	                            	}
+	                            } else {
+	                            	o.put(fld, s);
+	                            }
+
 	                        } else if (jp.getCurrentToken() == JSONToken.VALUE_NULL) {
 	                            o.put(fld, null);
 	                        } else if (jp.getCurrentToken() == JSONToken.VALUE_FALSE) { 
-	                            o.put(fld, false);
+	                            if (fldType == 'BOOLEAN') {
+	                            	o.put(fld, false);
+	                            } else {
+	                            	o.put(fld, 'False');
+	                            }
 	                        } else if (jp.getCurrentToken() == JSONToken.VALUE_TRUE) {
-	                            o.put(fld, true);
+	                            if (fldType == 'BOOLEAN') {
+	                            	o.put(fld, true);
+	                            } else {
+	                            	o.put(fld, 'True');
+	                            }
 	                        } else if (jp.getCurrentToken() == JSONToken.VALUE_NUMBER_INT) {
-	                            o.put(fld, jp.getIntegerValue());
+	                            if (fldType == 'INTEGER') {
+	                            	o.put(fld, jp.getIntegerValue());
+	                            } else if (fldType == 'PERCENT' || fldType == 'CURRENCY') {
+	                            	o.put(fld, decimal.valueOf(jp.getIntegerValue()));
+	                            } else if (fldType == 'DOUBLE') {
+	                            	o.put(fld, double.valueOf(jp.getIntegerValue()));
+	                           	} else {
+	                            	o.put(fld, string.valueOf(jp.getIntegerValue()));
+	                            }
 	                        } else if (jp.getCurrentToken() == JSONToken.VALUE_NUMBER_FLOAT) {
-	                            o.put(fld, jp.getDecimalValue());
+	                            decimal d = jp.getDecimalValue();
+	                            if (fldType == 'PERCENT' || fldType == 'CURRENCY') {
+	                            	o.put(fld, d);
+	                            } else if (fldType == 'INTEGER') {
+	                            	o.put(fld, d.round());
+	                            } else if (fldType == 'DOUBLE') {
+	                            	o.put(fld, d.doubleValue());
+	                            } else {
+	                            	o.put(fld, string.valueOf(d));
+	                            }
+	                            
+	                            
 	                        }
 	                        //system.debug('Updated field: ' + objName + '.' + fld);
 	                    } catch (exception e) {

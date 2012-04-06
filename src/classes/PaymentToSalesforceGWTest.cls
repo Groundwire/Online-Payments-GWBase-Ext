@@ -1597,4 +1597,5 @@ public with sharing class PaymentToSalesforceGWTest {
         system.assertEquals(null, op2[0].GWBase__recurring_payment_profile__c);         
         system.assertEquals('lily testy ' + system.today().year() + ' ' + GWBase.ONEN_Constants.OPP_DEFAULT_RECTYPE_FORTESTS, op2[0].name);
     }
+    
 }
