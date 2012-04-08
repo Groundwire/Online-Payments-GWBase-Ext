@@ -1410,23 +1410,29 @@ global virtual with sharing class PaymentToSalesforceGW extends gwop.PaymentToSa
 
     /*------------------------------------------------------------------------------------
     * getPaymentRecordTypeId method
-    * returns the record type id for a given item name, or else the default item name
+    * returns the record type id for a given item name, or else the default record type
     -------------------------------------------------------------------------------------*/
     global id getPaymentRecordTypeId( string itemName ) {
-        string recType = opSettings.gwop__DEFAULT_RECORD_TYPE__c;
-        
-        if (itemName != null && opSettings.gwop__ITEM_RECORD_TYPES__c != null) {
-            for (string pair : opSettings.gwop__ITEM_RECORD_TYPES__c.split(';')) {
-                if (pair.contains(',')) {
-                    string[] s = pair.split(',');
-                    if (s[0].trim() == itemName) {
-                        recType = s[1].trim();
-                        break;
-                    }
-                }
-            }
+        string recType;        
+        if (itemName != null) {
+        	if (opSettings.gwop__ITEM_RECORD_TYPES__c != null) {
+	            for (string pair : opSettings.gwop__ITEM_RECORD_TYPES__c.split(';')) {
+	                if (pair.contains(',')) {
+	                    string[] s = pair.split(',');
+	                    if (s[0].trim() == itemName) {
+	                        recType = s[1].trim();
+	                        break;
+	                    }
+	                }
+	            }
+        	} else {
+        		recType = itemName;
+        	}
         }
-        return GWBase.GW_RecTypes.GetRecordTypeId('Opportunity', recType);
+        id rtid = GWBase.GW_RecTypes.GetRecordTypeId('Opportunity', recType);
+        if (rtid == null && opSettings.gwop__DEFAULT_RECORD_TYPE__c != null)
+        	rtid = GWBase.GW_RecTypes.GetRecordTypeId('Opportunity', opSettings.gwop__DEFAULT_RECORD_TYPE__c); 
+        return rtid;
     }
 
     /*------------------------------------------------------------------------------------
