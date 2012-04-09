@@ -1468,7 +1468,6 @@ global virtual with sharing class PaymentToSalesforceGW extends gwop.PaymentToSa
 	            if (jp.getCurrentToken() == JSONToken.FIELD_NAME) {
 	                string fld = jp.getText();
 	                
-	                
 	                jp.nextToken();
 	                if (jp.getCurrentToken() == JSONToken.START_OBJECT) {
 	                    subobject = fld;
@@ -1476,7 +1475,12 @@ global virtual with sharing class PaymentToSalesforceGW extends gwop.PaymentToSa
 	                    try {
 	                    	
 	                    	// for each type, convert data to the right type of the destination field
-	                    	string fldType = GWBase.GW_Describe.getFieldType(objname, fld);
+	                    	list<string> ss = fld.split('__');
+	                    	string fldNoPrefix = ((ss.size() == 3) ? (ss[1] + '__c') : fld);
+	                    	string fldType = GWBase.GW_Describe.getFieldType(objname, fldNoPrefix);
+	                        //system.debug(logginglevel.warn, fld);
+	                        //system.debug(logginglevel.warn, fldType);
+	                        //system.debug(logginglevel.warn, jp.getCurrentToken());
 	                    	
 	                        if (jp.getCurrentToken() == JSONToken.VALUE_STRING) {
 	                            String s = jp.getText();
@@ -1543,10 +1547,8 @@ global virtual with sharing class PaymentToSalesforceGW extends gwop.PaymentToSa
 	                            } else {
 	                            	o.put(fld, string.valueOf(d));
 	                            }
-	                            
-	                            
 	                        }
-	                        //system.debug('Updated field: ' + objName + '.' + fld);
+	                        //system.debug(logginglevel.warn, 'Updated field: ' + objName + '.' + fld);
 	                    } catch (exception e) {
 				            system.debug(logginglevel.error,
 				            	'Could not update field \'' + objName + '.' + fld + '\' from custom payment data.');

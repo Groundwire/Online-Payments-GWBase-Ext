@@ -529,7 +529,7 @@ public with sharing class PaymentToSalesforceGWTest {
         opportunity[] o3 = [select id, stagename, amount, (select id, gwbase__amount__c, gwbase__online_transaction_id__c from gwbase__Payments__r where GWBase__isInstallment__c = true and GWBase__paid__c = true order by gwbase__amount__c desc) from opportunity where gwop__Online_Transaction_Id__c = 'X0X0X'];
         system.assertEquals(1, o3.size());  
         system.assertEquals(2, o3[0].gwbase__Payments__r.size());  
-	}  
+    }  
 
     static testMethod void testPartialRefund () {
         // process a new contact opp
@@ -569,7 +569,7 @@ public with sharing class PaymentToSalesforceGWTest {
         opmt.payment.pmtProcessor = gwop.OnlinePayment.Processor.PAYPAL;
         opmt.payment.txnId = 'R0R0R';
         opmt.payment.ParentTxnId = 'X0X0X';
-        opmt.payment.totalAmount = 45;  		// less than all of it
+        opmt.payment.totalAmount = 45;          // less than all of it
         opmt.payment.action = gwop.OnlinePayment.PaymentAction.REFUND;
         opmt.payment.pmtStatus = gwop.OnlinePayment.PaymentStatus.REVERSED;
         opmt.fprocessSinglePayment();
@@ -638,7 +638,7 @@ public with sharing class PaymentToSalesforceGWTest {
         opmt.payment.itemList.add(new gwop.OnlinePayment.Item( GWBase.ONEN_Constants.OPP_DEFAULT_RECTYPE_FORTESTS, '', '', 1, 12345, null, null ));
         opmt.payment.pmtStatus = gwop.OnlinePayment.PaymentStatus.COMPLETED;
         opmt.fprocessRecurringPayment();
-    	
+        
         // process a refund for that txn_id
         opmt = new PaymentToSalesforceGW();
         opmt.opSettings = PaymentToSalesforceGW.defaultSettings();
@@ -646,7 +646,7 @@ public with sharing class PaymentToSalesforceGWTest {
         opmt.payment.recurringTxnId = 'Y0Y0Y';
         opmt.payment.txnId = 'R0R0R';
         opmt.payment.ParentTxnId = 'X0X0X';
-        opmt.payment.totalAmount = 12345;  		// less than all of it
+        opmt.payment.totalAmount = 12345;       // less than all of it
         opmt.payment.action = gwop.OnlinePayment.PaymentAction.REFUND;
         opmt.payment.pmtStatus = gwop.OnlinePayment.PaymentStatus.REVERSED;
         
@@ -666,7 +666,7 @@ public with sharing class PaymentToSalesforceGWTest {
         system.assertEquals(GWBase.ONEN_Constants.OPP_DEFAULT_CLOSED_LOST_STAGE, o2[0].stagename);  
         system.assertEquals(0, o2[0].amount);  
 
-		// again, for kicks
+        // again, for kicks
         opmt.fprocessRecurringPayment(); 
         opportunity[] o3 = [select id, name, stagename, amount, (select id, gwbase__amount__c, gwbase__online_transaction_id__c from gwbase__Payments__r where GWBase__isInstallment__c = true and GWBase__paid__c = true order by gwbase__amount__c desc) from opportunity where gwop__Online_Transaction_Id__c = 'X0X0X'];
         system.debug(logginglevel.warn, o3);
@@ -770,7 +770,7 @@ public with sharing class PaymentToSalesforceGWTest {
         system.assertEquals(-100, o2[0].gwbase__Payments__r[1].gwbase__amount__c);  
         system.assertEquals(1100, o2[0].amount);  
         system.assertEquals(GWBase.ONEN_Constants.OPP_DEFAULT_PLEDGED_STAGE, o2[0].stagename);  
-    	
+        
     }
 
     static testMethod void testNewRecurringNewContact () {
@@ -1221,7 +1221,7 @@ public with sharing class PaymentToSalesforceGWTest {
     static testMethod void testJSONparsing () { 
         
         // sample JSON you can send via the custom field
-        string js = '{"GWBase__do_not_solicit__c":true, "homephone": "(360) 555-1212",' + 
+        string js = '{"GWBase__Do_Not_Solicit__c":true, "homephone": "(360) 555-1212",' + 
             ' "contact": {"mailingstate":"NY", "mailingcity":null, ' +
             ' "birthdate":"1999-09-09","bogus_field__c":"nada"}, ' + 
             ' "account":{"billingcity":"Seattle"},' + 
@@ -1243,7 +1243,7 @@ public with sharing class PaymentToSalesforceGWTest {
 
         // payment parsing for opp
         opportunity opp = new opportunity(name = 'test opp', closedate = system.today(), stagename = GWBase.ONEN_Constants.OPP_DEFAULT_CLOSED_WON_STAGE);
-        opp = (opportunity)(PaymentToSalesforceGW.updateSObjectFromJSON('payment', (sobject)opp, js));
+        opp = (opportunity)(PaymentToSalesforceGW.updateSObjectFromJSON('opportunity', (sobject)opp, js));
         system.assertEquals('Created by our nifty payment website.', opp.description);
     }   
 
