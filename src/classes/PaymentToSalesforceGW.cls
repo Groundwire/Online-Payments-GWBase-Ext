@@ -129,7 +129,7 @@ global virtual with sharing class PaymentToSalesforceGW extends gwop.PaymentToSa
         // and set the acct/con ids based on that
         if (payment.recurringTxnId != null) {
             GWBase__recurring_payment_profile__c[] rp = [Select GWBase__Type__c, GWBase__Transaction_Id__c, GWBase__Payment_Period__c, GWBase__account__c,  
-                Name, GWBase__Frequency__c, GWBase__End_Date__c, GWBase__Contact__c, GWBase__Amount__c, GWBase__account__r.name, GWBase__account__r.BillingCity, 
+                Name, GWBase__Frequency__c, GWBase__End_Date__c, GWBase__Start_Date__c, GWBase__Contact__c, GWBase__Amount__c, GWBase__account__r.name, GWBase__account__r.BillingCity, 
                 GWBase__account__r.BillingStreet, GWBase__account__r.billingCountry, GWBase__account__r.BillingPostalCode, 
                 GWBase__account__r.billingstate, GWBase__account__r.phone, GWBase__account__r.gwop__online_payer_id__c,
                 GWBase__contact__r.firstname, GWBase__contact__r.lastname, GWBase__contact__r.email, GWBase__contact__r.gwop__Online_Payer_Id__c,   
@@ -833,18 +833,39 @@ global virtual with sharing class PaymentToSalesforceGW extends gwop.PaymentToSa
                             // create the opp (unpaid)
                             paymentOpp = createRecurringPaymentOpp( recurringPayment, payment.startDate, false );                       
                             
-                            // if there was an existing payment, we need to stop it before inserting the new one
-                            if (oldRP != null) closeRecurringPayment(oldRP, true);
-        
-                            // now insert the opp, which will get us an Id
-                            //system.debug('inserting opp in fstartRecurringPayments.');
-                            //system.debug(paymentOpp);                     
-                            insert paymentOpp;
-                                
-                            // set the opp id to send back to the payment notification record
-                            //if we add N number of open opps in the future, setting log to oppId should go away?
-                            opportunityId = paymentOpp.id;
-                            success = true;                 
+                            // if there was an existing payment, we need to stop it before inserting the new one 
+                            boolean recurringProfileChanged;
+                            if (oldRP != null) {
+                            	//only close the old recurring payment profile if something substantive has changed. This protects against race conditions
+                            	//of multiple IPNs or IPN + Apex call at the same time for the same recurring payment
+                            	if (oldRP.GWBase__Amount__c != recurringPayment.GWBase__Amount__c ||
+                            		oldRP.GWBase__Start_Date__c != recurringPayment.GWBase__Start_Date__c ||
+                            		oldRP.GWBase__Frequency__c != recurringPayment.GWBase__Frequency__c ||
+                            		oldRP.GWBase__Payment_Period__c != recurringPayment.GWBase__Payment_Period__c) {                           	
+                        		
+	                        		closeRecurringPayment(oldRP, true);
+										
+									// now insert the opp, which will get us an Id
+		                            //system.debug('inserting opp in fstartRecurringPayments.');
+		                            //system.debug(paymentOpp);                     
+		                            insert paymentOpp;
+		                                
+		                            // set the opp id to send back to the payment notification record
+		                            //if we add N number of open opps in the future, setting log to oppId should go away?
+		                            opportunityId = paymentOpp.id;
+		                            success = true;   
+                        		}
+                            } else {
+	                            // now insert the opp, which will get us an Id
+	                            //system.debug('inserting opp in fstartRecurringPayments.');
+	                            //system.debug(paymentOpp);                     
+	                            insert paymentOpp;
+	                                
+	                            // set the opp id to send back to the payment notification record
+	                            //if we add N number of open opps in the future, setting log to oppId should go away?
+	                            opportunityId = paymentOpp.id;
+	                            success = true;
+                            }              
                         }
                     }                       
                 }
