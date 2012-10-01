@@ -1,4 +1,4 @@
-global virtual with sharing class PaymentToSalesforceGW extends gwop.PaymentToSalesforce {
+global virtual without sharing class PaymentToSalesforceGW extends gwop.PaymentToSalesforce {
 /*-----------------------------------------------------------------------------------------------
 * Written by Evan Callahan, copyright (c) 2010 Groundwire
 * This program is released under the GNU Affero General Public License, Version 3. http://www.gnu.org/licenses/
