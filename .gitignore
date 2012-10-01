@@ -17,3 +17,7 @@ src/triggers/GW_AccountTrigger_withDupeblocker.trigger
 src/triggers/GW_AccountTrigger_withDupeblocker.trigger-meta.xml
 src/triggers/GW_ContactTrigger_withDupeblocker.trigger
 src/triggers/GW_ContactTrigger_withDupeblocker.trigger-meta.xml
+/.DS_Store
+/.tm_properties
+/config/
+/GWBaseOP.sublime-project
